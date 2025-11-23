@@ -1,84 +1,99 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import json
+from openpyxl import load_workbook, Workbook
 import os
 from datetime import datetime
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
-class DataHandler:
+class ExcelHandler:
     def __init__(self):
-        self.data_file = "data.json"
+        # السطر 15 - غير اسم المستخدم هنا
+        self.excel_url = "https://raw.githubusercontent.com/mohamedmedhat5776-cmyk/water-dispatch-system/main/Dispatch%20order.xlsx"
+        self.local_file = "Dispatch order.xlsx"
         
-    def update_dispatch_data(self, location, quantity, day_of_month):
-        """تحديث بيانات التوزيع"""
+    def download_excel_file(self):
+        """تحميل ملف Excel من GitHub"""
         try:
-            print(f"📍 Updating dispatch: '{location}', Qty: {quantity}, Day: {day_of_month}")
-            
-            # حفظ البيانات في JSON
-            data = self._load_data()
-            
-            if 'dispatch' not in data:
-                data['dispatch'] = {}
-            
-            data['dispatch'][f"{location}_{day_of_month}"] = {
-                'quantity': float(quantity),
-                'date': datetime.now().isoformat(),
-                'location': location,
-                'day_of_month': day_of_month
-            }
-            
-            self._save_data(data)
-            print("✅ Dispatch data saved successfully!")
+            response = requests.get(self.excel_url)
+            with open(self.local_file, 'wb') as f:
+                f.write(response.content)
+            print("✅ Excel file downloaded from GitHub")
             return True
-            
         except Exception as e:
-            print(f"❌ Error updating dispatch data: {e}")
+            print(f"❌ Error downloading Excel: {e}")
+            return False
+    
+    def update_dispatch_data(self, location, quantity, day_of_month):
+        """تحديث بيانات التوزيع في Excel"""
+        try:
+            # تحميل الملف أولاً
+            if not os.path.exists(self.local_file):
+                self.download_excel_file()
+            
+            # فتح ملف Excel
+            wb = load_workbook(self.local_file)
+            sheet = wb[" Daily Dispatch"]
+            
+            print(f"📍 Updating Excel: '{location}', Qty: {quantity}, Day: {day_of_month}")
+            
+            # البحث عن الموقع في العمود B
+            row_num = None
+            for row in range(4, 80):  # من الصف 4 إلى 79
+                if sheet.cell(row=row, column=2).value == location:
+                    row_num = row
+                    break
+            
+            if row_num:
+                # تحديد العمود بناءً على اليوم
+                column_num = 6 + int(day_of_month)  # G=7 هو اليوم 1
+                
+                # تحديث الخلية
+                sheet.cell(row=row_num, column=column_num).value = float(quantity)
+                
+                # حفظ الملف
+                wb.save(self.local_file)
+                print("✅ Excel file updated successfully!")
+                return True
+            else:
+                print(f"❌ Location '{location}' not found in Excel")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error updating Excel: {e}")
             return False
     
     def update_water_data(self, ship_number, meter1_final, meter2_final, meter1_previous, date):
-        """تحديث بيانات المياه"""
+        """تحديث بيانات المياه في Excel"""
         try:
-            print(f"🚢 Updating water data - Ship: {ship_number}")
+            if not os.path.exists(self.local_file):
+                self.download_excel_file()
             
-            data = self._load_data()
+            wb = load_workbook(self.local_file)
+            sheet = wb["Water Quantity"]
             
-            if 'water' not in data:
-                data['water'] = {}
+            # تحديث بيانات السفينة (الصفوف 7-10)
+            row_num = 6 + int(ship_number)  # 7,8,9,10
             
-            data['water'][f"ship_{ship_number}_{date}"] = {
-                'ship_number': ship_number,
-                'meter1_final': float(meter1_final),
-                'meter2_final': float(meter2_final),
-                'meter1_previous': float(meter1_previous),
-                'date': date,
-                'volume': float(meter1_final) - float(meter1_previous)
-            }
+            sheet.cell(row=row_num, column=5).value = float(meter1_final)  # العمود E
+            sheet.cell(row=row_num, column=4).value = float(meter1_previous)  # العمود D
             
-            self._save_data(data)
-            print("✅ Water data saved successfully!")
+            # حساب الحجم تلقائياً
+            volume = float(meter1_final) - float(meter1_previous)
+            sheet.cell(row=row_num, column=6).value = volume  # العمود F
+            
+            wb.save(self.local_file)
+            print("✅ Water data updated in Excel!")
             return True
             
         except Exception as e:
             print(f"❌ Error updating water data: {e}")
             return False
-    
-    def _load_data(self):
-        """تحميل البيانات من ملف JSON"""
-        try:
-            with open(self.data_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return {}
-    
-    def _save_data(self, data):
-        """حفظ البيانات لملف JSON"""
-        with open(self.data_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
-# إنشاء كائن DataHandler
-data_handler = DataHandler()
+# إنشاء كائن ExcelHandler
+excel_handler = ExcelHandler()
 
 @app.route('/')
 def index():
@@ -91,13 +106,13 @@ def save_data():
         print(f"📨 Received data: {data}")
         
         if data['type'] == 'dispatch':
-            success = data_handler.update_dispatch_data(
+            success = excel_handler.update_dispatch_data(
                 data['location'],
                 data['quantity'],
                 data['dayOfMonth']
             )
         elif data['type'] == 'meter':
-            success = data_handler.update_water_data(
+            success = excel_handler.update_water_data(
                 data['shipNumber'],
                 data['meter1Final'],
                 data['meter2Final'],
@@ -107,7 +122,7 @@ def save_data():
         else:
             success = False
             
-        return jsonify({'success': success, 'message': 'تم الحفظ بنجاح' if success else 'فشل في الحفظ'})
+        return jsonify({'success': success, 'message': 'تم الحفظ في Excel بنجاح' if success else 'فشل في الحفظ'})
         
     except Exception as e:
         print(f"🔥 Error in save_data: {e}")
