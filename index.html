@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تسجيل بيانات المياه - مسندم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .nav-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+        .form-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border: none;
+            padding: 10px 30px;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border: none;
+            padding: 10px 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <h1>نظام تسجيل بيانات المياه - محافظة مسندم</h1>
+        <p class="mb-0">Al Tayer Engineering Services LLC</p>
+    </div>
+
+    <div class="container">
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dispatch-tab" data-bs-toggle="tab" data-bs-target="#dispatch" type="button" role="tab">
+                    تسجيل بيانات التوزيع
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="meter-tab" data-bs-toggle="tab" data-bs-target="#meter" type="button" role="tab">
+                    تسجيل قراءات العدادات
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- تبويب تسجيل بيانات التوزيع -->
+            <div class="tab-pane fade show active" id="dispatch" role="tabpanel">
+                <div class="form-section">
+                    <h3 class="mb-4 text-primary">📦 تسجيل بيانات التوزيع اليومي</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">الموقع</label>
+                            <select class="form-select" id="locationSelect">
+                                <option value="">اختر الموقع</option>
+                                <!-- سيتم ملء المواقع تلقائياً من JavaScript -->
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">الكمية الموزعة (m³)</label>
+                            <input type="number" class="form-control" id="quantity" placeholder="أدخل الكمية">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">التاريخ</label>
+                            <input type="date" class="form-control" id="dispatchDate">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">اليوم من الشهر</label>
+                            <select class="form-select" id="dayOfMonth">
+                                <option value="">اختر اليوم</option>
+                                <!-- سيتم ملء الأيام من 1 إلى 31 -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-primary btn-lg" onclick="saveDispatchData()">
+                            💾 حفظ بيانات التوزيع
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تبويب تسجيل قراءات العدادات -->
+            <div class="tab-pane fade" id="meter" role="tabpanel">
+                <div class="form-section">
+                    <h3 class="mb-4 text-success">📊 تسجيل قراءات العدادات</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">رقم السفينة</label>
+                            <select class="form-select" id="shipNumber">
+                                <option value="">اختر السفينة</option>
+                                <option value="1">السفينة 1</option>
+                                <option value="2">السفينة 2</option>
+                                <option value="3">السفينة 3</option>
+                                <option value="4">السفينة 4</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">التاريخ</label>
+                            <input type="date" class="form-control" id="meterDate">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">القراءة النهائية - عداد 1 (اليوم الحالي)</label>
+                            <input type="number" class="form-control" id="meter1Final">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">القراءة النهائية - عداد 2 (اليوم الحالي)</label>
+                            <input type="number" class="form-control" id="meter2Final">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">القراءة النهائية - عداد 1 (اليوم السابق)</label>
+                            <input type="number" class="form-control" id="meter1Previous">
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-success btn-lg" onclick="saveMeterData()">
+                            💾 حفظ قراءات العدادات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- منطقة الإشعارات -->
+        <div id="alertArea"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // قائمة المواقع من ملف Excel
+        const locations = [
+            "Hafa", "Hafa Nakhal", "Danab", "Hafa Sheeb", "Hafa Yadar", "Khor meha", 
+            "Sanat", "Khor Meala", "Sharya Aq", "Sharya Hel", "Maysar", "Addas", 
+            "Sadwain", "Dess", "Hekel", "Deni", "Aqaba", "Aimes", "Khesa", "Mawi",
+            "Habalain", "Ghafool", "Muqaqa", "Khab Al show", "Maqlab B", "Ras Amud Co.",
+            "Boot", "Film", "Najed", "Mansal", "Mayat", "Neba", "Shaboos", "Maqta",
+            "Suwayrat", "Balad", "Mantaf", "Al Sebatah", "Doorsuni", "Taheet", "Murwany",
+            "Sefet Bait", "Sharyat Shesa", "Ghub Ali", "Sowayra", "Ghub Qad", "Ghurm",
+            "Mazaya Co.", "Jum", "Qabba", "Maqlab Kumzar", "Fardha", "Qalta", "Kheran",
+            "Maysag", "Kukba", "Manjal", "Meali", "Safa", "Sefat Zangi", "R.Shk.Mas",
+            "Towalah", "Aydah", "Fanakha", "Humssi", "Nadheefi", "Huwenia", "Qana",
+            "Telegraph Co.", "Maqlab", "Sebi", "Tub", "Asha", "Shum", "Sefat Garib Co.", "Ghassa"
+        ];
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // ملء قائمة المواقع
+            const locationSelect = document.getElementById('locationSelect');
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelect.appendChild(option);
+            });
+
+            // ملء قائمة الأيام
+            const daySelect = document.getElementById('dayOfMonth');
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                daySelect.appendChild(option);
+            }
+
+            // تعيين التاريخ الحالي كافتراضي
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dispatchDate').value = today;
+            document.getElementById('meterDate').value = today;
+        });
+
+        // دالة حفظ بيانات التوزيع
+        function saveDispatchData() {
+            const location = document.getElementById('locationSelect').value;
+            const quantity = document.getElementById('quantity').value;
+            const date = document.getElementById('dispatchDate').value;
+            const dayOfMonth = document.getElementById('dayOfMonth').value;
+
+            console.log('بيانات التوزيع:', { location, quantity, date, dayOfMonth });
+
+            if (!location || !quantity || !date || !dayOfMonth) {
+                showAlert('يرجى ملء جميع الحقول', 'danger');
+                return;
+            }
+
+            // هنا سيتم الاتصال بـ Python لكتابة البيانات في Excel
+            const data = {
+                type: 'dispatch',
+                location: location,
+                quantity: quantity,
+                date: date,
+                dayOfMonth: dayOfMonth
+            };
+
+            sendToPython(data);
+        }
+
+        // دالة حفظ قراءات العدادات
+        function saveMeterData() {
+            const shipNumber = document.getElementById('shipNumber').value;
+            const date = document.getElementById('meterDate').value;
+            const meter1Final = document.getElementById('meter1Final').value;
+            const meter2Final = document.getElementById('meter2Final').value;
+            const meter1Previous = document.getElementById('meter1Previous').value;
+
+            console.log('بيانات العدادات:', { shipNumber, date, meter1Final, meter2Final, meter1Previous });
+
+            if (!shipNumber || !date || !meter1Final || !meter2Final || !meter1Previous) {
+                showAlert('يرجى ملء جميع الحقول', 'danger');
+                return;
+            }
+
+            // هنا سيتم الاتصال بـ Python لكتابة البيانات في Excel
+            const data = {
+                type: 'meter',
+                shipNumber: shipNumber,
+                date: date,
+                meter1Final: meter1Final,
+                meter2Final: meter2Final,
+                meter1Previous: meter1Previous
+            };
+
+            sendToPython(data);
+        }
+
+        // دالة إرسال البيانات لـ Python
+        function sendToPython(data) {
+            console.log('جاري إرسال البيانات لـ Python:', data);
+            
+            fetch('/save_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('نتيجة الحفظ:', result);
+                if (result.success) {
+                    showAlert('تم حفظ البيانات بنجاح!', 'success');
+                    // تنظيف الحقول بعد الحفظ
+                    if (data.type === 'dispatch') {
+                        document.getElementById('quantity').value = '';
+                    } else {
+                        document.getElementById('meter1Final').value = '';
+                        document.getElementById('meter2Final').value = '';
+                        document.getElementById('meter1Previous').value = '';
+                    }
+                } else {
+                    showAlert('فشل في حفظ البيانات: ' + result.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('خطأ في الإرسال:', error);
+                showAlert('خطأ في الاتصال بالسيرفر', 'danger');
+            });
+        }
+
+        // دالة عرض الإشعارات
+        function showAlert(message, type) {
+            const alertArea = document.getElementById('alertArea');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertArea.appendChild(alert);
+            
+            // إزالة الإشعار تلقائياً بعد 5 ثواني
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
